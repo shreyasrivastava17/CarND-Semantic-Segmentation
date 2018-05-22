@@ -60,14 +60,14 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     lyr4_conv1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, 1, padding="SAME", kernel_regularizer =
                             tf.contrib.layers.l2_regularizer(1e-3));
     lyr7_lyr4_add = tf.add(lyr_7_upsample, lyr4_conv1x1);
-    lyr4_lyr7_conv1x1 = tf.layers.conv2d(lyr7_lyr4_add, num_classes, 1, 1, padding="SAME", kernel_regularizer =
-                            tf.contrib.layers.l2_regularizer(1e-3));
+    # lyr4_lyr7_conv1x1 = tf.layers.conv2d(lyr7_lyr4_add, num_classes, 1, 1, padding="SAME", kernel_regularizer =
+    #                         tf.contrib.layers.l2_regularizer(1e-3));
     lyr7_ly4_upsampled = tf.layers.conv2d_transpose(lyr4_lyr7_conv1x1, num_classes, 4, 2, padding = "SAME",
                             kernel_regularizer = tf.contrib.layers.l2_regularizer(1e-3));
     lyr3_conv1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, 1, padding="SAME", kernel_regularizer =
                             tf.contrib.layers.l2_regularizer(1e-3));
     lyr3_lyr4_7_add = tf.add(lyr7_ly4_upsampled, lyr3_conv1x1);
-    lyr3_4_7_upsampled = tf.layers.conv2d_transpose(lyr4_lyr7_conv1x1, num_classes, 16, 8, padding = "SAME",
+    lyr3_4_7_upsampled = tf.layers.conv2d_transpose(lyr3_lyr4_7_add, num_classes, 16, 8, padding = "SAME",
                             kernel_regularizer = tf.contrib.layers.l2_regularizer(1e-3));
 
     return lyr3_4_7_upsampled;
@@ -114,13 +114,14 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     :param learning_rate: TF Placeholder for learning rate
     """
     # TODO: Implement function
+    sess.run(tf.gloabal_variable_initializer())
     batches = 0;
     total_loss = 0;
     for epoch in range(epochs):
-        print("EPOCH {} ...".format(i+1))
+        print("EPOCH {} ...".format(epoch+1))
         for image,label in get_batches_fn(batch_size):
-            _, loss = sess.run([train_op,cross_entropy_loss], feed_dict = {input_image: image, correct_label: label, keep_prob: 0.6,
-                    learning_rate: .0001})
+            _, loss = sess.run([train_op,cross_entropy_loss], feed_dict = {input_image: image, correct_label: label, keep_prob: 0.5,
+                    learning_rate: .0005})
             batches += 1;
             total_loss += loss;
         print("Avg loss: = {:.3f}".format(total_loss/batches));
@@ -149,8 +150,8 @@ def run():
 
         # OPTIONAL: Augment Images for better results
         #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network
-        epochs = 20;
-        batch_size = 10;
+        epochs = 25;
+        batch_size = 5;
 
         correct_label = tf.placeholder(tf.int32, (None,None,None,num_classes), name = "correct_label")
         learning_rate = tf.placeholder(tf.float32, name = "leran_rate")
